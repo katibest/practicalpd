@@ -1,10 +1,37 @@
 defmodule Practicalpd.Users do
-  import Ecto.Query
-  alias Practicalpd.{Repo, User}
+  import Ecto.Query, warn: false
+  alias Practicalpd.Repo
+  alias Practicalpd.Users.User
 
   def list_users do
+    Repo.all(User)
+  end
+
+  def list_users_by_ids(ids) when is_list(ids) do
     User
-    |> order_by([u], u.name)
+    |> where([u], u.id in ^ids)
     |> Repo.all()
+  end
+
+  def get_user!(id), do: Repo.get!(User, id)
+
+  def create_user(attrs \\ %{}) do
+    %User{}
+    |> User.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def update_user(%User{} = user, attrs) do
+    user
+    |> User.changeset(attrs)
+    |> Repo.update()
+  end
+
+  def delete_user(%User{} = user) do
+    Repo.delete(user)
+  end
+
+  def change_user(%User{} = user, attrs \\ %{}) do
+    User.changeset(user, attrs)
   end
 end

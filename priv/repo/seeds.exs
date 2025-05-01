@@ -10,101 +10,149 @@
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
 
-alias Practicalpd.{Repo, User, Project, Task}
+alias Practicalpd.{Repo, Users.User, Projects.Project, Tasks.Task, Events.Event}
 
 # Create users
 users = [
   %{
-    email: "alice@example.com",
-    name: "Alice Johnson",
-    password_hash: "password123"
+    name: "John Smith",
+    email: "john@example.com"
   },
   %{
-    email: "bob@example.com",
-    name: "Bob Smith",
-    password_hash: "password123"
+    name: "Jane Doe",
+    email: "jane@example.com"
   },
   %{
-    email: "charlie@example.com",
-    name: "Charlie Brown",
-    password_hash: "password123"
+    name: "Bob Wilson",
+    email: "bob@example.com"
   }
 ]
 
-Enum.each(users, fn user_data ->
-  %User{}
-  |> User.changeset(user_data)
-  |> Repo.insert!()
+created_users = Enum.map(users, fn user_data ->
+  Repo.insert!(%User{
+    name: user_data.name,
+    email: user_data.email
+  })
 end)
 
-# Get all users
-users = Repo.all(User)
-
-# Create projects
-projects = [
+# Create projects with all required fields
+projects_data = [
   %{
     title: "Website Redesign",
     description: "Complete redesign of the company website with modern UI/UX",
     status: "in_progress",
-    user_id: Enum.at(users, 0).id
+    client_name: "Acme Corporation",
+    due_date: ~D[2024-12-31]
   },
   %{
     title: "Mobile App Development",
     description: "Development of a new mobile application for iOS and Android",
     status: "planning",
-    user_id: Enum.at(users, 1).id
+    client_name: "TechStart Inc",
+    due_date: ~D[2024-10-15]
   },
   %{
     title: "Marketing Campaign",
     description: "Q3 marketing campaign planning and execution",
     status: "completed",
-    user_id: Enum.at(users, 2).id
+    client_name: "Global Marketing Co",
+    due_date: ~D[2024-09-30]
   }
 ]
 
-Enum.each(projects, fn project_data ->
-  %Project{}
-  |> Project.changeset(project_data)
-  |> Repo.insert!()
+# Insert projects and create associations with users
+created_projects = Enum.map(projects_data, fn project_data ->
+  project = Repo.insert!(%Project{
+    title: project_data.title,
+    description: project_data.description,
+    status: project_data.status,
+    client_name: project_data.client_name,
+    due_date: project_data.due_date
+  })
+
+  # Assign random team members to each project (2-3 members per project)
+  team_size = Enum.random(2..3)
+  project_users = Enum.take_random(created_users, team_size)
+
+  Enum.each(project_users, fn user ->
+    Repo.insert!(%Practicalpd.ProjectUser{
+      project_id: project.id,
+      user_id: user.id
+    })
+  end)
+
+  project
 end)
 
-# Get all projects
-projects = Repo.all(Project)
-
-# Create tasks
-tasks = [
+# Create tasks for each project
+tasks_data = [
   %{
     title: "Design Homepage",
     description: "Create new homepage design with modern layout",
-    status: "in_progress",
-    project_id: Enum.at(projects, 0).id,
-    user_id: Enum.at(users, 0).id
+    status: "in_progress"
   },
   %{
     title: "Implement User Authentication",
-    description: "Set up user authentication system for the mobile app",
-    status: "todo",
-    project_id: Enum.at(projects, 1).id,
-    user_id: Enum.at(users, 1).id
+    description: "Set up user authentication system",
+    status: "todo"
   },
   %{
     title: "Create Social Media Content",
     description: "Develop content for social media platforms",
-    status: "completed",
-    project_id: Enum.at(projects, 2).id,
-    user_id: Enum.at(users, 2).id
+    status: "completed"
   },
   %{
     title: "Optimize Database Queries",
     description: "Review and optimize database queries for better performance",
-    status: "in_progress",
-    project_id: Enum.at(projects, 0).id,
-    user_id: Enum.at(users, 1).id
+    status: "in_progress"
   }
 ]
 
-Enum.each(tasks, fn task_data ->
+# Distribute tasks across projects and users
+Enum.each(tasks_data, fn task_data ->
+  project = Enum.random(created_projects)
+  user = Enum.random(created_users)
+
   %Task{}
-  |> Task.changeset(task_data)
+  |> Task.changeset(Map.merge(task_data, %{
+    project_id: project.id,
+    user_id: user.id
+  }))
   |> Repo.insert!()
 end)
+
+# Create sample events
+today = Date.utc_today()
+
+events = [
+  %{
+    title: "Project Kickoff Meeting",
+    description: "Initial meeting with the client to discuss project requirements",
+    date: today,
+    project_id: Enum.at(created_projects, 0).id
+  },
+  %{
+    title: "Design Review",
+    description: "Review the initial design mockups with the team",
+    date: Date.add(today, 1),
+    project_id: Enum.at(created_projects, 1).id
+  },
+  %{
+    title: "Client Presentation",
+    description: "Present the first prototype to the client",
+    date: Date.add(today, 2),
+    project_id: Enum.at(created_projects, 2).id
+  },
+  %{
+    title: "Team Standup",
+    description: "Daily team sync meeting",
+    date: Date.add(today, 3),
+    project_id: Enum.at(created_projects, 0).id
+  }
+]
+
+for event_attrs <- events do
+  %Event{}
+  |> Event.changeset(event_attrs)
+  |> Repo.insert!()
+end

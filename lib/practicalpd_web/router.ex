@@ -18,6 +18,7 @@ defmodule PracticalpdWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+    resources "/projects", ProjectController
   end
 
   # Other scopes may use custom stacks.

@@ -1,0 +1,66 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="mb-8">
+    <div class="flex items-center justify-between">
+      <h1 class="text-3xl font-bold text-gray-900"><%= @project.title %></h1>
+      <div class="flex items-center space-x-4">
+        <.link navigate={~p"/projects/#{@project}/edit"} class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900">
+          Edit Project
+        </.link>
+        <.link navigate={~p"/"} class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900">
+          Back to Projects
+        </.link>
+      </div>
+    </div>
+    <p class="mt-2 text-gray-600"><%= @project.description %></p>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Project Details -->
+    <div class="bg-white shadow rounded-lg p-6">
+      <h2 class="text-xl font-semibold text-gray-900 mb-4">Project Details</h2>
+      <dl class="space-y-4">
+        <div>
+          <dt class="text-sm font-medium text-gray-500">Client</dt>
+          <dd class="mt-1 text-sm text-gray-900"><%= @project.client_name %></dd>
+        </div>
+        <div>
+          <dt class="text-sm font-medium text-gray-500">Status</dt>
+          <dd class="mt-1">
+            <span class={[
+              "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
+              @project.status == "planning" && "bg-yellow-100 text-yellow-800",
+              @project.status == "in_progress" && "bg-blue-100 text-blue-800",
+              @project.status == "completed" && "bg-green-100 text-green-800"
+            ]}>
+              <%= String.capitalize(@project.status) %>
+            </span>
+          </dd>
+        </div>
+        <div>
+          <dt class="text-sm font-medium text-gray-500">Due Date</dt>
+          <dd class="mt-1 text-sm text-gray-900"><%= Calendar.strftime(@project.due_date, "%B %d, %Y") %></dd>
+        </div>
+      </dl>
+    </div>
+
+    <!-- Team Members -->
+    <div class="bg-white shadow rounded-lg p-6">
+      <h2 class="text-xl font-semibold text-gray-900 mb-4">Team Members</h2>
+      <ul class="space-y-4">
+        <%= for member <- @project.team_members do %>
+          <li class="flex items-center space-x-3">
+            <div class="flex-shrink-0">
+              <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                <span class="text-gray-500 font-medium"><%= String.first(member.name) %></span>
+              </div>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-900"><%= member.name %></p>
+              <p class="text-sm text-gray-500"><%= member.email %></p>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  </div>
+</div> 
